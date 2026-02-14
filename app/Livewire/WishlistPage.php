@@ -13,9 +13,10 @@ class WishlistPage extends Component
     public function mount()
     {
         if (auth()->check()) {
-            $this->wishlist = Wishlist::firstOrCreate(
-                ['user_id' => auth()->id(), 'name' => 'Default']
-            );
+            $this->wishlist = Wishlist::with('items.product')
+                ->firstOrCreate(
+                    ['user_id' => auth()->id(), 'name' => 'Default']
+                );
         }
     }
 
@@ -43,7 +44,9 @@ class WishlistPage extends Component
         $item->total_price = $item->quantity * $item->unit_price;
         $item->save();
 
-        $cart->refresh();
+        // Clear cart cache and refresh
+        Cart::clearCache();
+        $cart->refresh()->load('items.product');
         $cartCount = $cart->items->sum('quantity');
 
         $this->dispatch('product-added');

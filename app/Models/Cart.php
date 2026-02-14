@@ -21,8 +21,21 @@ class Cart extends Model
 
     /**
      * Get or create the current active cart for the visitor (user or guest).
+     * Cached per request to avoid multiple database queries.
      */
     public static function current(): self
+    {
+        $cacheKey = 'cart_' . (auth()->id() ?? session()->getId());
+        
+        return app()->bound($cacheKey) 
+            ? app($cacheKey)
+            : app()->instance($cacheKey, static::resolveCurrentCart());
+    }
+
+    /**
+     * Resolve the current cart from database.
+     */
+    protected static function resolveCurrentCart(): self
     {
         $query = static::query();
 
@@ -49,5 +62,22 @@ class Cart extends Model
     public function items(): HasMany
     {
         return $this->hasMany(CartItem::class);
+    }
+
+    /**
+     * Get the total quantity of items in the cart using database aggregate.
+     */
+    public function getTotalQuantityAttribute(): int
+    {
+        return $this->items()->sum('quantity') ?? 0;
+    }
+
+    /**
+     * Clear the cached cart instance for the current user/session.
+     */
+    public static function clearCache(): void
+    {
+        $cacheKey = 'cart_' . (auth()->id() ?? session()->getId());
+        app()->forgetInstance($cacheKey);
     }
 }

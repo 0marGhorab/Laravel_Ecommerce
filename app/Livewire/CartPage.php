@@ -21,6 +21,7 @@ class CartPage extends Component
         $item->total_price = $item->quantity * $item->unit_price;
         $item->save();
 
+        Cart::clearCache();
         $this->cart->refresh()->load('items.product');
         $cartCount = $this->cart->items->sum('quantity');
         $this->dispatch('cart-updated', count: $cartCount);
@@ -38,6 +39,7 @@ class CartPage extends Component
             $item->save();
         }
 
+        Cart::clearCache();
         $this->cart->refresh()->load('items.product');
         $cartCount = $this->cart->items->sum('quantity');
         $this->dispatch('cart-updated', count: $cartCount);
@@ -46,6 +48,7 @@ class CartPage extends Component
     public function removeItem(int $itemId): void
     {
         $this->cart->items()->whereKey($itemId)->delete();
+        Cart::clearCache();
         $this->cart->refresh()->load('items.product');
         $cartCount = $this->cart->items->sum('quantity');
         $this->dispatch('cart-updated', count: $cartCount);

@@ -32,7 +32,8 @@ class ProductShow extends Component
         $item->total_price = $item->quantity * $item->unit_price;
         $item->save();
 
-        $cart->refresh();
+        Cart::clearCache();
+        $cart->refresh()->load('items.product');
         $cartCount = $cart->items->sum('quantity');
 
         $this->dispatch('product-added');
@@ -62,7 +63,8 @@ class ProductShow extends Component
             $item->save();
         }
 
-        $cart->refresh();
+        Cart::clearCache();
+        $cart->refresh()->load('items.product');
         $cartCount = $cart->items->sum('quantity');
         $this->dispatch('cart-updated', count: $cartCount);
     }
@@ -74,11 +76,12 @@ class ProductShow extends Component
             return;
         }
 
-        $wishlist = Wishlist::firstOrCreate(
-            ['user_id' => auth()->id(), 'name' => 'Default']
-        );
+        $wishlist = Wishlist::with('items')
+            ->firstOrCreate(
+                ['user_id' => auth()->id(), 'name' => 'Default']
+            );
 
-        $exists = $wishlist->items()->where('product_id', $this->product->id)->exists();
+        $exists = $wishlist->items->contains('product_id', $this->product->id);
 
         if ($exists) {
             $wishlist->items()->where('product_id', $this->product->id)->delete();
@@ -94,16 +97,16 @@ class ProductShow extends Component
 
     public function render()
     {
+        // Optimize wishlist check with eager loading
         $isInWishlist = false;
         if (auth()->check()) {
-            $wishlist = Wishlist::where('user_id', auth()->id())
+            $wishlist = Wishlist::with('items')
+                ->where('user_id', auth()->id())
                 ->where('name', 'Default')
                 ->first();
             
             if ($wishlist) {
-                $isInWishlist = $wishlist->items()
-                    ->where('product_id', $this->product->id)
-                    ->exists();
+                $isInWishlist = $wishlist->items->contains('product_id', $this->product->id);
             }
         }
 

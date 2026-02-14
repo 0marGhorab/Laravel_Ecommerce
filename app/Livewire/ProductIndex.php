@@ -41,7 +41,9 @@ class ProductIndex extends Component
             $item->save();
         }
 
-        $cart->refresh();
+        // Clear cart cache and refresh
+        Cart::clearCache();
+        $cart->refresh()->load('items.product');
         $cartCount = $cart->items->sum('quantity');
         $this->dispatch('cart-updated', count: $cartCount);
     }
@@ -140,24 +142,25 @@ class ProductIndex extends Component
             ->pluck('quantity', 'product_id')
             ->toArray();
 
-        // Get wishlist product IDs for authenticated users
+        // Get wishlist product IDs for authenticated users (optimized with eager loading)
         $wishlistProductIds = [];
         if (auth()->check()) {
-            $wishlist = Wishlist::where('user_id', auth()->id())
+            $wishlist = Wishlist::with('items')
+                ->where('user_id', auth()->id())
                 ->where('name', 'Default')
                 ->first();
             
             if ($wishlist) {
-                $wishlistProductIds = $wishlist->items()
-                    ->pluck('product_id')
-                    ->toArray();
+                $wishlistProductIds = $wishlist->items->pluck('product_id')->toArray();
             }
         }
 
-        // Get all active categories
-        $categories = Category::orderBy('sort_order')
-            ->orderBy('name')
-            ->get();
+        // Get all active categories (cached)
+        $categories = cache()->remember('categories_list', 3600, function () {
+            return Category::orderBy('sort_order')
+                ->orderBy('name')
+                ->get();
+        });
 
         return view('livewire.product-index', [
             'products' => $products,
