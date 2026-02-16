@@ -1,17 +1,16 @@
 <div>
     <div class="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
-        <h1 class="text-2xl font-semibold mb-6">My Orders</h1>
+        <h1 class="text-2xl font-semibold text-warm-darker mb-6 animate-fade-in">My Orders</h1>
 
         @if ($orders->count())
             <div class="space-y-4">
                 @foreach ($orders as $order)
-                    <div class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden hover:shadow-md transition">
+                    <div class="card-cozy overflow-hidden animate-fade-in-up">
                         <div class="p-6">
                             <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-                                <!-- Order Info -->
                                 <div class="flex-1">
                                     <div class="flex items-center gap-4 mb-2">
-                                        <h3 class="text-lg font-semibold text-gray-900">
+                                        <h3 class="text-lg font-semibold text-warm-darker">
                                             Order #{{ $order->order_number }}
                                         </h3>
                                         <span class="px-2.5 py-0.5 rounded-full text-xs font-medium
@@ -25,27 +24,25 @@
                                             {{ ucfirst(str_replace('_', ' ', $order->status)) }}
                                         </span>
                                     </div>
-                                    <p class="text-sm text-gray-500">
+                                    <p class="text-sm text-warm/70">
                                         Placed on {{ $order->created_at->format('M d, Y') }} at {{ $order->created_at->format('g:i A') }}
                                     </p>
-                                    <p class="text-sm text-gray-600 mt-1">
+                                    <p class="text-sm text-warm/80 mt-1">
                                         {{ $order->items->count() }} {{ $order->items->count() === 1 ? 'item' : 'items' }} • Total: ${{ number_format($order->grand_total, 2) }}
                                     </p>
                                 </div>
 
-                                <!-- Actions -->
                                 <div class="flex items-center gap-3">
                                     <a 
                                         href="{{ route('orders.show', $order->order_number) }}"
-                                        class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 transition"
+                                        class="btn-cozy-soft text-sm"
                                     >
                                         View Details
                                     </a>
                                 </div>
                             </div>
 
-                            <!-- Order Items Preview -->
-                            <div class="mt-4 pt-4 border-t border-gray-200">
+                            <div class="mt-4 pt-4 border-t border-cream-200">
                                 <div class="flex gap-4 overflow-x-auto">
                                     @foreach($order->items->take(4) as $item)
                                         <div class="flex-shrink-0 w-16 h-16 bg-gray-100 rounded-md overflow-hidden">
@@ -79,21 +76,18 @@
                 {{ $orders->links() }}
             </div>
         @else
-            <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-12 text-center">
-                <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
-                </svg>
-                <h3 class="mt-4 text-lg font-medium text-gray-900">No orders yet</h3>
-                <p class="mt-2 text-sm text-gray-500">When you place an order, it will appear here.</p>
-                <div class="mt-6">
-                    <a 
-                        href="{{ route('products.index') }}"
-                        class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 transition"
-                    >
-                        Start Shopping
-                    </a>
-                </div>
-            </div>
+            <x-empty-state
+                title="No orders yet"
+                description="When you place an order, it will appear here."
+                ctaText="Start shopping"
+                ctaUrl="{{ route('products.index') }}"
+            >
+                <x-slot:icon>
+                    <svg class="w-8 h-8" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
+                    </svg>
+                </x-slot:icon>
+            </x-empty-state>
         @endif
     </div>
 </div>

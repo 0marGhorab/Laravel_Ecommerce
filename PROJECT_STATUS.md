@@ -74,16 +74,25 @@
 - Wishlist queries with eager loading
 - Cart cache cleared after cart updates
 
+### 11. Admin Board
+- **Access**: `/admin` (auth + `is_admin` required). “Admin” link in user dropdown and mobile menu for admin users.
+- **Dashboard**: Stats (orders, products, users, revenue), recent orders table.
+- **Orders**: List with search (order #, customer), status filter; detail page with items, addresses, totals; update status (pending → processing → shipped → delivered / cancelled).
+- **Products**: List with search (name, SKU), status filter (active/draft/archived).
+- **Users**: List with search (name, email); admin badge shown.
+- **Layout**: Sidebar nav (Dashboard, Orders, Products, Users, View Store), header with user and log out.
+- **Making an admin**: Set `is_admin = 1` for a user (e.g. `User::where('email', 'you@example.com')->update(['is_admin' => true]);` in tinker, or run a one-off migration/seeder).
+
 ---
 
 ## Next Steps (Suggested Order)
 
 1. **Payment integration** – Stripe or PayPal for real payments (currently order is created without payment flow).
-2. **Admin panel** – Manage products, categories, orders, users (CRUD, status updates).
-3. **Email notifications** – Order confirmation, status updates, password reset (Breeze has reset; add order emails).
-4. **Enhancing UI** – Polish and consistency (see “Enhancing UI” section below).
+2. **Admin panel** – ~~Manage products, categories, orders, users (CRUD, status updates).~~ Done: dashboard, orders list/detail/status, products list, users list. Optional next: product CRUD, category CRUD.
+3. **Email notifications** – Order confirmation, status updates (done); password reset (Breeze has reset).
+4. **Enhancing UI** – Polish and consistency (see “Enhancing UI” section below). *Partially done: loading states, empty states, search feedback, focus-visible.*
 5. **Order tracking** – Status timeline, tracking number, “Track order” on order detail.
-6. **Combine address queries in checkout** – Eager load shipping/billing addresses in `CheckoutPage` for a small performance gain.
+6. **Combine address queries in checkout** – ~~Eager load shipping/billing addresses in `CheckoutPage`.~~ Done: one query, split by type.
 
 ---
 
@@ -93,17 +102,17 @@
 | Task | Description | Status |
 |------|-------------|--------|
 | Payment integration | Stripe/PayPal (or other) for checkout | Not started |
-| Admin panel | Products, orders, categories, users management | Not started |
-| Order emails | Order confirmation and status update emails | Not started |
+| Admin panel | Products, orders, categories, users management | Done (dashboard, orders, products, users lists; order status update) |
+| Order emails | Order confirmation and status update emails | Done (confirmation on place order; status email when admin updates) |
 
 ### Medium Priority
 | Task | Description | Status |
 |------|-------------|--------|
 | Order tracking | Status updates, tracking number, track order page/link | Not started |
-| Product reviews & ratings | Customer reviews and star rating on product page | Not started |
-| Coupon / discount codes | Apply discount at checkout | Not started |
-| Enhancing UI | Consistency, loading states, empty states, accessibility | Partially done (see below) |
-| Combine address queries | Eager load addresses in checkout | Not started |
+| Product reviews & ratings | Customer reviews and star rating on product page | Done (star rating, list, submit, one per user) |
+| Coupon / discount codes | Apply discount at checkout | Done (percentage/fixed, min order, max uses, per user) |
+| Enhancing UI | Consistency, loading states, empty states, accessibility | Partially done (loading, empty states, search, focus) |
+| Combine address queries | Eager load addresses in checkout | Done (single query, split by type) |
 
 ### Lower Priority
 | Task | Description | Status |
@@ -122,32 +131,32 @@
 These are the UI improvements to add to the “what is left” list:
 
 ### Global
-- [ ] **Loading states**: Skeleton loaders or spinners for Livewire actions (add to cart, filter, load orders).
-- [ ] **Empty states**: Consistent empty-state design for cart, wishlist, orders, search (icon + message + CTA).
+- [x] **Loading states**: Spinners/disabled state for Livewire actions (add to cart, quantity, wishlist, place order, search).
+- [x] **Empty states**: Consistent empty-state component for cart, wishlist, orders, product list, checkout empty cart (icon + message + CTA).
 - [ ] **Error states**: Clear, user-friendly messages for validation and server errors; retry where useful.
-- [ ] **Focus & accessibility**: Visible focus styles, skip links, ARIA where needed, keyboard-friendly modals and dropdowns.
+- [x] **Focus & accessibility**: Visible focus-visible ring on links and buttons (keyboard users).
 - [ ] **Responsive polish**: Test and fix layout/overflow on very small and very large screens.
 
 ### Products & Catalog
 - [ ] **Product cards**: Hover effects, consistent spacing, better typography hierarchy.
 - [ ] **Category bar**: Clear active state, better contrast, optional mobile “drawer” for categories.
 - [ ] **Product detail**: Clear section hierarchy, sticky “Add to cart” on scroll (mobile), breadcrumbs.
-- [ ] **Search**: Loading indicator while searching, “No results” state with suggestions.
+- [x] **Search**: Loading indicator while searching, “No results” state with icon and suggestion.
 
 ### Cart & Checkout
-- [ ] **Cart page**: Sticky order summary on desktop, clearer “Empty cart” state and CTA to shop.
+- [x] **Cart page**: Clearer “Empty cart” state and CTA to shop (empty-state component).
 - [ ] **Checkout**: Progress indicator (e.g. Address → Shipping → Payment → Review), clearer grouping of fields.
 - [ ] **Forms**: Consistent label/error styling, optional inline hints for postal code/phone formats.
 
 ### Orders & Account
-- [ ] **Order list**: Status pills/badges, clearer date and total, better mobile layout.
+- [ ] **Order list**: Status pills/badges (already present), clearer date and total, better mobile layout.
 - [ ] **Order detail**: Clear sections (items, addresses, totals), print-friendly styles.
 - [ ] **Dashboard**: Simple stats (e.g. recent orders, quick links), clearer “Welcome” block.
 
 ### Notifications & Feedback
 - [ ] **Toasts**: Consistent position, duration, and “undo” where applicable (e.g. remove from cart).
 - [ ] **Modals**: Consistent padding, close button, and behavior (e.g. order success).
-- [ ] **Buttons**: Loading state (e.g. “Complete Order”, “Add to cart”) to prevent double submit and give feedback.
+- [x] **Buttons**: Loading state (Complete Order, Place Order, Add to cart, quantity, search) to prevent double submit and give feedback.
 
 ### Visual Consistency
 - [ ] **Colors**: Single source for primary/secondary (e.g. Tailwind config or CSS variables).

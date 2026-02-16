@@ -15,13 +15,13 @@
         @vite(['resources/css/app.css', 'resources/js/app.js'])
         @livewireStyles
     </head>
-    <body class="font-sans antialiased">
-        <div class="min-h-screen bg-gray-100">
+    <body class="font-sans antialiased bg-cream">
+        <div class="min-h-screen bg-cream">
             <livewire:layout.navigation />
 
             <!-- Page Heading -->
             @if (isset($header))
-                <header class="bg-white shadow">
+                <header class="bg-white/80 backdrop-blur-sm border-b border-cream-200 shadow-cozy">
                     <div class="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
                         {{ $header }}
                     </div>
@@ -73,14 +73,26 @@
                     show = true;
                     setTimeout(() => show = false, 3000);
                 "
+                x-on:review-submitted.window="
+                    message = 'Thank you! Your review has been posted.';
+                    type = 'success';
+                    show = true;
+                    setTimeout(() => show = false, 2500);
+                "
+                x-on:review-login-required.window="
+                    message = 'Please login to leave a review';
+                    type = 'warning';
+                    show = true;
+                    setTimeout(() => show = false, 3000);
+                "
                 x-show="show"
                 x-transition
                 :class="{
-                    'bg-green-600': type === 'success',
-                    'bg-blue-600': type === 'info',
-                    'bg-yellow-600': type === 'warning'
+                    'bg-warm-dark': type === 'success',
+                    'bg-warm': type === 'info',
+                    'bg-warm-darker': type === 'warning'
                 }"
-                class="fixed bottom-4 right-4 z-50 text-white px-4 py-3 rounded shadow-lg text-sm flex items-center gap-3"
+                class="fixed bottom-4 right-4 z-50 text-cream px-4 py-3 rounded-xl shadow-cozy-lg text-sm flex items-center gap-3 transition-all duration-300"
                 style="display: none;"
             >
                 <span x-text="message"></span>

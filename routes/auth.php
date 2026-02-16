@@ -1,8 +1,17 @@
 <?php
 
 use App\Http\Controllers\Auth\VerifyEmailController;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 use Livewire\Volt\Volt;
+
+Route::post('logout', function (Request $request) {
+    Auth::guard('web')->logout();
+    $request->session()->invalidate();
+    $request->session()->regenerateToken();
+    return redirect('/');
+})->middleware('auth')->name('logout');
 
 Route::middleware('guest')->group(function () {
     Volt::route('register', 'pages.auth.register')

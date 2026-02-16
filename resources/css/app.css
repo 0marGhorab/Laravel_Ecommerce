@@ -2,13 +2,45 @@
 @tailwind components;
 @tailwind utilities;
 
+@layer base {
+    body {
+        @apply bg-cream text-warm-darker;
+    }
+    /* Visible focus for keyboard users; cozy ring */
+    a:focus-visible,
+    button:focus-visible {
+        @apply outline-none ring-2 ring-warm ring-offset-2 ring-offset-cream;
+    }
+}
+
+@layer components {
+    .btn-cozy {
+        @apply inline-flex items-center justify-center px-4 py-2.5 rounded-lg font-medium
+               bg-warm text-white shadow-cozy
+               hover:bg-warm-dark active:bg-warm-darker
+               transition-all duration-200 ease-out;
+    }
+    .btn-cozy-soft {
+        @apply inline-flex items-center justify-center px-4 py-2.5 rounded-lg font-medium
+               bg-cream-200 text-warm-darker border border-cream-300
+               hover:bg-cream-300 hover:border-warm-light
+               transition-all duration-200 ease-out;
+    }
+    .card-cozy {
+        @apply bg-white rounded-xl shadow-cozy border border-cream-200/80
+               transition-shadow duration-200 hover:shadow-cozy-lg;
+    }
+}
+
 @layer utilities {
     .scrollbar-hide::-webkit-scrollbar {
         display: none;
     }
-    
     .scrollbar-hide {
         -ms-overflow-style: none;
         scrollbar-width: none;
+    }
+    .animate-in {
+        animation: fadeInUp 0.5s ease-out forwards;
     }
 }

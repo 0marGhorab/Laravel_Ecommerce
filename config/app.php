@@ -123,4 +123,16 @@ return [
         'store' => env('APP_MAINTENANCE_STORE', 'database'),
     ],
 
+    /*
+    |--------------------------------------------------------------------------
+    | Email verification on register
+    |--------------------------------------------------------------------------
+    | When true, after submitting the register form we send a 6-digit code to
+    | the user's email and require it before creating the account. When false,
+    | the account is created immediately (no verification step). Set to true
+    | in .env when you have working mail (e.g. MAIL_MAILER=smtp configured).
+    */
+
+    'email_verification_on_register' => env('EMAIL_VERIFICATION_ON_REGISTER', false),
+
 ];

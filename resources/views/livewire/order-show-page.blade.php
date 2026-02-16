@@ -132,7 +132,7 @@
                                 </div>
                                 @if($order->discount_total > 0)
                                     <div class="flex justify-between text-sm">
-                                        <span class="text-gray-600">Discount</span>
+                                        <span class="text-gray-600">Discount{{ $order->coupon_code ? ' (' . $order->coupon_code . ')' : '' }}</span>
                                         <span class="text-green-600">-${{ number_format($order->discount_total, 2) }}</span>
                                     </div>
                                 @endif

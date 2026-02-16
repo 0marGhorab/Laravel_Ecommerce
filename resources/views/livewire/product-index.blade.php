@@ -1,7 +1,51 @@
 <div>
+    {{-- Promo banner slideshow at top (homepage + product list) --}}
+    @if(isset($banners) && $banners->isNotEmpty())
+        <div class="w-full left-0 right-0 relative h-48 sm:h-56 md:h-64 overflow-hidden bg-gray-800" x-data="{ current: 0, total: {{ $banners->count() }} }" x-init="setInterval(() => { current = (current + 1) % total }, 5000)">
+            @foreach($banners as $i => $banner)
+                <div x-show="current === {{ $i }}"
+                     x-transition:enter="transition ease-out duration-500"
+                     x-transition:enter-start="opacity-0"
+                     x-transition:enter-end="opacity-100"
+                     x-transition:leave="transition ease-in duration-300"
+                     x-transition:leave-start="opacity-100"
+                     x-transition:leave-end="opacity-0"
+                     class="absolute inset-0 bg-cover bg-center bg-no-repeat {{ $banner->image_url ? '' : 'bg-gray-800' }}"
+                     style="@if($banner->image_url) background-image: url('{{ $banner->image_url }}'); @endif {{ $loop->first ? '' : 'display: none;' }}"
+                >
+                    <div class="absolute inset-0 bg-black/40 flex items-center justify-between px-6 sm:px-10 md:px-16 text-white">
+                        <div class="max-w-2xl">
+                            @if($banner->title)
+                                <h2 class="text-xl sm:text-2xl md:text-4xl font-bold drop-shadow">{{ $banner->title }}</h2>
+                            @endif
+                            @if($banner->subtitle)
+                                <p class="mt-2 text-white/95 text-sm sm:text-base md:text-lg drop-shadow">{{ $banner->subtitle }}</p>
+                            @endif
+                            @if($banner->cta_text && $banner->cta_url)
+                                <a href="{{ $banner->cta_url }}" class="mt-4 inline-block px-5 py-2.5 bg-white text-gray-900 font-medium rounded-lg hover:bg-gray-100 transition shadow">
+                                    {{ $banner->cta_text }}
+                                </a>
+                            @endif
+                        </div>
+                    </div>
+                </div>
+            @endforeach
+            @if($banners->count() > 1)
+                <div class="absolute bottom-3 left-0 right-0 flex justify-center gap-2 z-10">
+                    @foreach($banners as $i => $banner)
+                        <button type="button" @click="current = {{ $i }}"
+                                class="w-2.5 h-2.5 rounded-full transition"
+                                :class="current === {{ $i }} ? 'bg-white scale-110' : 'bg-white/50 hover:bg-white/70'"
+                                aria-label="Go to slide {{ $i + 1 }}"></button>
+                    @endforeach
+                </div>
+            @endif
+        </div>
+    @endif
+
     <!-- Category Carousel Bar -->
     @if($categories->count() > 0)
-        <div class="bg-white border-b border-gray-200 sticky top-0 z-40 shadow-sm"
+        <div class="bg-white/95 backdrop-blur-sm border-b border-cream-200 sticky top-0 z-40 shadow-cozy"
              x-data="{
                  scrollContainer: null,
                  canScrollLeft: false,
@@ -43,10 +87,10 @@
                     x-show="canScrollLeft"
                     x-transition
                     @click="scrollLeft()"
-                    class="absolute left-0 top-0 bottom-0 z-10 px-3 bg-white hover:bg-gray-50 flex items-center justify-center border-r border-gray-200 shadow-sm"
+                    class="absolute left-0 top-0 bottom-0 z-10 px-3 bg-white/90 hover:bg-cream-50 flex items-center justify-center border-r border-cream-200 transition-colors"
                     aria-label="Scroll left"
                 >
-                    <svg class="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <svg class="w-5 h-5 text-warm" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" />
                     </svg>
                 </button>
@@ -61,7 +105,7 @@
                         <!-- All Categories Button -->
                         <button
                             wire:click="clearFilter"
-                            class="flex-shrink-0 px-4 py-2 rounded-full font-medium text-sm transition-colors duration-200 whitespace-nowrap {{ $categoryFilter === null ? 'bg-indigo-600 text-white' : 'bg-gray-100 hover:bg-indigo-100 text-gray-700 hover:text-indigo-700' }}"
+                            class="flex-shrink-0 px-4 py-2 rounded-full font-medium text-sm transition-all duration-200 whitespace-nowrap {{ $categoryFilter === null ? 'bg-warm text-cream shadow-cozy' : 'bg-cream-100 text-warm-darker hover:bg-cream-200 hover:text-warm-dark' }}"
                         >
                             All Products
                         </button>
@@ -69,7 +113,7 @@
                         @foreach($categories as $category)
                             <button
                                 wire:click="filterByCategory('{{ $category->slug }}')"
-                                class="flex-shrink-0 px-4 py-2 rounded-full font-medium text-sm transition-colors duration-200 whitespace-nowrap {{ $categoryFilter === $category->slug ? 'bg-indigo-600 text-white' : 'bg-gray-100 hover:bg-indigo-100 text-gray-700 hover:text-indigo-700' }}"
+                                class="flex-shrink-0 px-4 py-2 rounded-full font-medium text-sm transition-all duration-200 whitespace-nowrap {{ $categoryFilter === $category->slug ? 'bg-warm text-cream shadow-cozy' : 'bg-cream-100 text-warm-darker hover:bg-cream-200 hover:text-warm-dark' }}"
                             >
                                 {{ $category->name }}
                             </button>
@@ -82,10 +126,10 @@
                     x-show="canScrollRight"
                     x-transition
                     @click="scrollRight()"
-                    class="absolute right-0 top-0 bottom-0 z-10 px-3 bg-white hover:bg-gray-50 flex items-center justify-center border-l border-gray-200 shadow-sm"
+                    class="absolute right-0 top-0 bottom-0 z-10 px-3 bg-white/90 hover:bg-cream-50 flex items-center justify-center border-l border-cream-200 transition-colors"
                     aria-label="Scroll right"
                 >
-                    <svg class="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <svg class="w-5 h-5 text-warm" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7" />
                     </svg>
                 </button>
@@ -94,8 +138,8 @@
     @endif
 
     <div class="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
-        <div class="flex items-center justify-between mb-6">
-            <h1 class="text-2xl font-semibold">
+        <div class="flex items-center justify-between mb-6 animate-fade-in">
+            <h1 class="text-2xl font-semibold text-warm-darker">
                 @if($selectedCategory)
                     {{ $selectedCategory->name }}
                 @else
@@ -105,7 +149,7 @@
             @if($selectedCategory)
                 <button
                     wire:click="clearFilter"
-                    class="text-sm text-indigo-600 hover:text-indigo-700 font-medium"
+                    class="text-sm text-warm hover:text-warm-dark font-medium transition-colors"
                 >
                     Clear Filter
                 </button>
@@ -113,20 +157,20 @@
         </div>
         
         @if($selectedCategory)
-            <p class="text-gray-600 mb-6">
+            <p class="text-warm/80 mb-6 animate-fade-in">
                 Showing {{ $products->total() }} {{ $products->total() === 1 ? 'product' : 'products' }} in {{ $selectedCategory->name }}
             </p>
         @endif
 
         @if ($products->count())
             <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-                @foreach ($products as $product)
+                @foreach ($products as $index => $product)
                     @php
                         $qty = $cartQuantities[$product->id] ?? 0;
                     @endphp
 
-                    <div class="rounded-lg overflow-hidden shadow-sm hover:shadow-md transition bg-white flex flex-col relative group">
-                        <div class="aspect-[4/3] bg-gray-100 relative overflow-hidden"
+                    <div class="card-cozy overflow-hidden flex flex-col relative group animate-fade-in-up" style="animation-delay: {{ min($index * 50, 300) }}ms;">
+                        <div class="aspect-[4/3] bg-cream-100 relative overflow-hidden"
                              x-data="{
                                  currentImage: 0,
                                  images: @js($product->images->pluck('path')->toArray()),
@@ -221,15 +265,15 @@
                             </template>
                         </div>
 
-                        <a href="{{ route('products.show', $product->slug) }}" class="block">
+                        <a href="{{ route('products.show', $product->slug) }}" class="block group/link">
                             <div class="p-4 space-y-1">
-                                <div class="text-sm text-gray-500">
+                                <div class="text-sm text-warm/70">
                                     {{ $product->category?->name ?? 'Uncategorized' }}
                                 </div>
-                                <div class="font-medium text-gray-900">
+                                <div class="font-medium text-warm-darker group-hover/link:text-warm-dark transition-colors">
                                     {{ $product->name }}
                                 </div>
-                                <div class="text-indigo-600 font-semibold">
+                                <div class="text-warm-dark font-semibold">
                                     ${{ number_format($product->price, 2) }}
                                 </div>
                             </div>
@@ -238,36 +282,38 @@
                         <!-- Action Icons -->
                         <div class="px-4 pb-4 mt-auto flex items-center justify-between gap-2">
                             @if ($qty > 0)
-                                <!-- Counter on the left -->
-                                <div class="flex items-center border rounded">
+                                <div class="flex items-center border border-cream-300 rounded-lg overflow-hidden">
                                     <button
                                         wire:click="decrementProduct({{ $product->id }})"
-                                        class="px-2 py-1 text-gray-600 hover:bg-gray-100"
+                                        wire:loading.attr="disabled"
+                                        wire:loading.class="opacity-50 cursor-wait"
+                                        class="px-2 py-1 text-warm hover:bg-cream-50 transition"
                                     >
                                         -
                                     </button>
-                                    <div class="px-3 py-1 border-x text-sm">
+                                    <div class="px-3 py-1 border-x border-cream-300 text-sm text-warm-darker">
                                         {{ $qty }}
                                     </div>
                                     <button
                                         wire:click="incrementProduct({{ $product->id }})"
-                                        class="px-2 py-1 text-gray-600 hover:bg-gray-100"
+                                        wire:loading.attr="disabled"
+                                        wire:loading.class="opacity-50 cursor-wait"
+                                        class="px-2 py-1 text-warm hover:bg-cream-50 transition"
                                     >
                                         +
                                     </button>
                                 </div>
                             @else
-                                <!-- Empty space on left when no items -->
                                 <div></div>
                             @endif
 
-                            <!-- Icons on the right -->
                             <div class="flex items-center gap-2 ml-auto">
                                 @if ($qty == 0)
-                                    <!-- Cart Icon Button (only shown when cart is empty) -->
                                     <button
                                         wire:click="addToCart({{ $product->id }})"
-                                        class="flex items-center justify-center p-2 border border-indigo-600 text-indigo-600 rounded-md hover:bg-indigo-50 transition"
+                                        wire:loading.attr="disabled"
+                                        wire:loading.class="opacity-60 cursor-wait"
+                                        class="flex items-center justify-center p-2 border border-warm text-warm rounded-lg hover:bg-cream-100 transition"
                                         title="Add to Cart"
                                     >
                                         <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
@@ -277,17 +323,20 @@
                                     </button>
                                 @endif
 
-                                <!-- Wishlist Heart Icon -->
                                 @if(in_array($product->id, $wishlistProductIds))
                                     <button
                                         wire:click="addToWishlist({{ $product->id }})"
-                                        class="flex items-center justify-center p-2 border border-red-600 text-red-600 rounded-md hover:bg-red-50 transition"
+                                        wire:loading.attr="disabled"
+                                        wire:loading.class="opacity-60 cursor-wait"
+                                        class="flex items-center justify-center p-2 border border-red-400 text-red-500 rounded-lg hover:bg-red-50 transition"
                                         title="Remove from Wishlist"
                                     >
                                 @else
                                     <button
                                         wire:click="addToWishlist({{ $product->id }})"
-                                        class="flex items-center justify-center p-2 border border-gray-300 text-gray-600 rounded-md hover:border-red-600 hover:text-red-600 hover:bg-red-50 transition"
+                                        wire:loading.attr="disabled"
+                                        wire:loading.class="opacity-60 cursor-wait"
+                                        class="flex items-center justify-center p-2 border border-cream-300 text-warm/70 rounded-lg hover:border-red-400 hover:text-red-500 hover:bg-red-50/50 transition"
                                         title="Add to Wishlist"
                                     >
                                 @endif
@@ -314,7 +363,26 @@
                 {{ $products->links() }}
             </div>
         @else
-            <p class="text-gray-500">No products found.</p>
+            <x-empty-state
+                title="No products found"
+                :description="$selectedCategory ? 'Try another category or clear the filter.' : 'Check back later for new items.'"
+                :ctaText="$selectedCategory ? null : null"
+                :ctaUrl="null"
+            >
+                <x-slot:icon>
+                    <svg class="w-8 h-8" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M20 7l-8 4-8-4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+                    </svg>
+                </x-slot:icon>
+                @if($selectedCategory)
+                    <div class="mt-6">
+                        <button wire:click="clearFilter"
+                                class="btn-cozy">
+                            Clear filter
+                        </button>
+                    </div>
+                @endif
+            </x-empty-state>
         @endif
     </div>
 </div>

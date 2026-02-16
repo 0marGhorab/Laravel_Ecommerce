@@ -3,6 +3,7 @@
 namespace App\Livewire;
 
 use App\Models\Product;
+use App\Models\PromoBanner;
 use App\Models\Cart;
 use App\Models\Wishlist;
 use App\Models\Category;
@@ -162,11 +163,14 @@ class ProductIndex extends Component
                 ->get();
         });
 
+        $banners = PromoBanner::active()->ordered()->get();
+
         return view('livewire.product-index', [
             'products' => $products,
             'cartQuantities' => $cartQuantities,
             'wishlistProductIds' => $wishlistProductIds,
             'categories' => $categories,
+            'banners' => $banners,
         ]);
     }
 }

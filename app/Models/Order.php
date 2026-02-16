@@ -21,12 +21,19 @@ class Order extends Model
         'billing_address_id',
         'subtotal',
         'discount_total',
+        'coupon_id',
+        'coupon_code',
         'tax_total',
         'shipping_total',
         'grand_total',
         'payment_method',
         'payment_status',
     ];
+
+    public function coupon(): BelongsTo
+    {
+        return $this->belongsTo(Coupon::class);
+    }
 
     public function user(): BelongsTo
     {

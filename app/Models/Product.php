@@ -39,4 +39,25 @@ class Product extends Model
     {
         return $this->hasMany(ProductImage::class);
     }
+
+    public function reviews(): HasMany
+    {
+        return $this->hasMany(Review::class);
+    }
+
+    public function approvedReviews(): HasMany
+    {
+        return $this->reviews()->where('approved', true);
+    }
+
+    public function getAverageRatingAttribute(): ?float
+    {
+        $avg = $this->approvedReviews()->avg('rating');
+        return $avg !== null ? round((float) $avg, 1) : null;
+    }
+
+    public function getReviewsCountAttribute(): int
+    {
+        return $this->approvedReviews()->count();
+    }
 }

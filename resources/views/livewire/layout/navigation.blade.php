@@ -59,14 +59,14 @@ new class extends Component
     }
 @endphp
 
-<nav x-data="{ open: false }" class="bg-white border-b border-gray-100">
+<nav x-data="{ open: false }" class="bg-white/90 backdrop-blur-sm border-b border-cream-200 shadow-cozy">
     <!-- Primary Navigation Menu -->
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="flex justify-between items-center h-16">
             <!-- Left: Logo -->
             <div class="flex items-center">
-                <a href="{{ route('products.index') }}" wire:navigate class="shrink-0 flex items-center">
-                    <x-application-logo class="block h-9 w-auto fill-current text-gray-800" />
+                <a href="{{ route('products.index') }}" wire:navigate class="group shrink-0 flex items-center transition opacity-90 hover:opacity-100">
+                    <x-application-logo class="block h-14 w-auto" />
                 </a>
             </div>
 
@@ -76,7 +76,7 @@ new class extends Component
                  x-on:click.outside="showResults = false">
                 <label class="relative block">
                     <span class="sr-only">Search</span>
-                    <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-400">
+                    <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-warm/70">
                         <svg class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-4.35-4.35M10.5 18a7.5 7.5 0 1 1 0-15 7.5 7.5 0 0 1 0 15z" />
                         </svg>
@@ -86,25 +86,35 @@ new class extends Component
                         wire:model.live.debounce.300ms="search"
                         x-on:focus="showResults = true"
                         x-on:keydown.escape="showResults = false"
-                        class="block w-full rounded-full border-gray-300 pl-9 pr-3 py-1.5 text-sm placeholder:text-gray-400 focus:border-indigo-500 focus:ring-indigo-500"
+                        class="block w-full rounded-full border-cream-300 bg-cream-50 pl-9 pr-3 py-2 text-sm text-warm-darker placeholder:text-warm/60 focus:border-warm focus:ring-warm/30 transition"
                         placeholder="Search products..."
                     />
                 </label>
 
                 <!-- Search Results Dropdown -->
                 <div x-show="showResults && $wire.search.length >= 2"
-                     x-transition
-                     class="absolute top-full left-0 right-0 mt-2 bg-white border border-gray-200 rounded-lg shadow-lg z-50 max-h-96 overflow-y-auto"
+                     x-transition:enter="transition ease-out duration-200"
+                     x-transition:enter-start="opacity-0 translate-y-1"
+                     x-transition:enter-end="opacity-100 translate-y-0"
+                     class="absolute top-full left-0 right-0 mt-2 bg-white border border-cream-200 rounded-xl shadow-cozy-lg z-50 max-h-96 overflow-y-auto"
                      style="display: none;">
+                    <div wire:loading class="px-4 py-6 text-center text-warm/70 text-sm flex items-center justify-center gap-2">
+                        <svg class="animate-spin h-5 w-5 text-warm" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" aria-hidden="true">
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                        Searching…
+                    </div>
                     @if(strlen($this->search) >= 2)
+                        <div wire:loading.remove>
                         @if($this->searchResults->count() > 0)
                             <div class="py-2">
                                 @foreach($this->searchResults as $product)
                                     <a href="{{ route('products.show', $product->slug) }}"
                                        wire:navigate
                                        x-on:click="showResults = false"
-                                       class="flex items-center gap-3 px-4 py-2 hover:bg-gray-50 transition">
-                                        <div class="w-12 h-12 bg-gray-100 rounded overflow-hidden flex-shrink-0">
+                                       class="flex items-center gap-3 px-4 py-3 hover:bg-cream-50 transition-colors duration-200 rounded-lg mx-1">
+                                        <div class="w-12 h-12 bg-cream-100 rounded-lg overflow-hidden flex-shrink-0">
                                             @if($product->images->count() > 0)
                                                 <img 
                                                     src="{{ $product->images->first()->url }}"
@@ -120,13 +130,13 @@ new class extends Component
                                             @endif
                                         </div>
                                         <div class="flex-1 min-w-0">
-                                            <div class="font-medium text-gray-900 truncate">
+                                            <div class="font-medium text-warm-darker truncate">
                                                 {{ $product->name }}
                                             </div>
-                                            <div class="text-sm text-gray-500">
+                                            <div class="text-sm text-warm/70">
                                                 {{ $product->category?->name ?? 'Uncategorized' }}
                                             </div>
-                                            <div class="text-sm font-semibold text-indigo-600">
+                                            <div class="text-sm font-semibold text-warm-dark">
                                                 ${{ number_format($product->price, 2) }}
                                             </div>
                                         </div>
@@ -134,10 +144,15 @@ new class extends Component
                                 @endforeach
                             </div>
                         @else
-                            <div class="px-4 py-6 text-center text-gray-500 text-sm">
-                                No products found for "{{ $this->search }}"
+                            <div class="px-4 py-6 text-center">
+                                <svg class="mx-auto h-10 w-10 text-gray-300" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24" aria-hidden="true">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-4.35-4.35M10.5 18a7.5 7.5 0 1 1 0-15 7.5 7.5 0 0 1 0 15z" />
+                                </svg>
+                                <p class="mt-2 text-sm text-warm/80">No products found for "{{ $this->search }}"</p>
+                                <p class="mt-1 text-xs text-warm/60">Try a different search term</p>
                             </div>
                         @endif
+                        </div>
                     @endif
                 </div>
             </div>
@@ -148,7 +163,7 @@ new class extends Component
                 <a href="{{ route('wishlist.index') }}" 
                    x-data="{ count: {{ $wishlistCount }} }"
                    x-on:wishlist-updated.window="count = $event.detail.count"
-                   class="relative text-gray-600 hover:text-red-600">
+                   class="relative text-warm/80 hover:text-red-500 transition-colors duration-200">
                     <svg class="h-6 w-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round"
                               d="M4.318 6.318a4.5 4.5 0 0 1 6.364 0L12 7.636l1.318-1.318a4.5 4.5 0 1 1 6.364 6.364L12 21.364l-7.682-7.682a4.5 4.5 0 0 1 0-6.364z" />
@@ -164,14 +179,14 @@ new class extends Component
                 <a href="{{ route('cart.index') }}" 
                    x-data="{ count: {{ $cartCount }} }"
                    x-on:cart-updated.window="count = $event.detail.count"
-                   class="relative text-gray-600 hover:text-indigo-600">
+                   class="relative text-warm/80 hover:text-warm-dark transition-colors duration-200">
                     <svg class="h-6 w-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round"
                               d="M3 3h2l.4 2M7 13h10l3-8H6.4M7 13L5.4 5M7 13l-2 5m5 5a1 1 0 1 0 0-2 1 1 0 0 0 0 2zm7 0a1 1 0 1 0 0-2 1 1 0 0 0 0 2z" />
                     </svg>
                     <span x-show="count > 0"
                           x-transition
-                          class="absolute -top-1 -right-1 inline-flex items-center justify-center px-1.5 py-0.5 text-[10px] font-semibold leading-none text-white bg-indigo-600 rounded-full"
+                          class="absolute -top-1 -right-1 inline-flex items-center justify-center px-1.5 py-0.5 text-[10px] font-semibold leading-none text-cream bg-warm-dark rounded-full"
                           x-text="count">
                     </span>
                 </a>
@@ -181,7 +196,7 @@ new class extends Component
                     <div class="hidden sm:flex sm:items-center">
                         <x-dropdown align="right" width="48">
                             <x-slot name="trigger">
-                                <button class="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-gray-500 bg-white hover:text-gray-700 focus:outline-none transition ease-in-out duration-150">
+                                <button class="inline-flex items-center px-3 py-2 border border-cream-200 text-sm leading-4 font-medium rounded-lg text-warm-darker bg-cream-50 hover:bg-cream-100 focus:outline-none transition duration-200">
                                     <div x-data="{{ json_encode(['name' => auth()->user()->name]) }}" x-text="name" x-on:profile-updated.window="name = $event.detail.name"></div>
 
                                     <div class="ms-1">
@@ -193,6 +208,11 @@ new class extends Component
                             </x-slot>
 
                             <x-slot name="content">
+                                @if(auth()->user()->isAdmin())
+                                    <x-dropdown-link href="{{ url('/admin') }}">
+                                        {{ __('Admin') }}
+                                    </x-dropdown-link>
+                                @endif
                                 <x-dropdown-link :href="route('orders.index')" wire:navigate>
                                     {{ __('My Orders') }}
                                 </x-dropdown-link>
@@ -215,14 +235,14 @@ new class extends Component
                     <div class="hidden sm:flex sm:items-center gap-3">
                         <a 
                             href="{{ route('login') }}"
-                            class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition"
+                            class="inline-flex items-center px-4 py-2 border border-cream-300 rounded-lg text-sm font-medium text-warm-darker bg-white hover:bg-cream-50 transition duration-200"
                         >
                             Sign In
                         </a>
                         @if (Route::has('register'))
                             <a 
                                 href="{{ route('register') }}"
-                                class="inline-flex items-center px-4 py-2 border border-transparent rounded-md text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition"
+                                class="btn-cozy"
                             >
                                 Sign Up
                             </a>
@@ -232,7 +252,7 @@ new class extends Component
 
             <!-- Hamburger -->
             <div class="-me-2 flex items-center sm:hidden">
-                <button @click="open = ! open" class="inline-flex items-center justify-center p-2 rounded-md text-gray-400 hover:text-gray-500 hover:bg-gray-100 focus:outline-none focus:bg-gray-100 focus:text-gray-500 transition duration-150 ease-in-out">
+                <button @click="open = ! open" class="inline-flex items-center justify-center p-2 rounded-lg text-warm/70 hover:text-warm-darker hover:bg-cream-100 focus:outline-none transition duration-200">
                     <svg class="h-6 w-6" stroke="currentColor" fill="none" viewBox="0 0 24 24">
                         <path :class="{'hidden': open, 'inline-flex': ! open }" class="inline-flex" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
                         <path :class="{'hidden': ! open, 'inline-flex': open }" class="hidden" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
@@ -252,13 +272,18 @@ new class extends Component
 
         <!-- Responsive Settings Options -->
         @auth
-            <div class="pt-4 pb-1 border-t border-gray-200">
+            <div class="pt-4 pb-1 border-t border-cream-200">
                 <div class="px-4">
-                    <div class="font-medium text-base text-gray-800" x-data="{{ json_encode(['name' => auth()->user()->name]) }}" x-text="name" x-on:profile-updated.window="name = $event.detail.name"></div>
-                    <div class="font-medium text-sm text-gray-500">{{ auth()->user()->email }}</div>
+                    <div class="font-medium text-base text-warm-darker" x-data="{{ json_encode(['name' => auth()->user()->name]) }}" x-text="name" x-on:profile-updated.window="name = $event.detail.name"></div>
+                    <div class="font-medium text-sm text-warm/70">{{ auth()->user()->email }}</div>
                 </div>
 
                 <div class="mt-3 space-y-1">
+                    @if(auth()->user()->isAdmin())
+                        <x-responsive-nav-link href="{{ url('/admin') }}">
+                            {{ __('Admin') }}
+                        </x-responsive-nav-link>
+                    @endif
                     <x-responsive-nav-link :href="route('orders.index')" wire:navigate>
                         {{ __('My Orders') }}
                     </x-responsive-nav-link>
@@ -277,18 +302,18 @@ new class extends Component
             </div>
         @else
             <!-- Guest Authentication Links -->
-            <div class="pt-4 pb-1 border-t border-gray-200">
+            <div class="pt-4 pb-1 border-t border-cream-200">
                 <div class="px-4 space-y-2">
                     <a 
                         href="{{ route('login') }}"
-                        class="block w-full text-center px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 transition"
+                        class="block w-full text-center px-4 py-2 border border-cream-300 rounded-lg text-sm font-medium text-warm-darker bg-white hover:bg-cream-50 transition"
                     >
                         Sign In
                     </a>
                     @if (Route::has('register'))
                         <a 
                             href="{{ route('register') }}"
-                            class="block w-full text-center px-4 py-2 border border-transparent rounded-md text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 transition"
+                            class="block w-full text-center btn-cozy"
                         >
                             Sign Up
                         </a>

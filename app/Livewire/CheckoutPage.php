@@ -4,9 +4,12 @@ namespace App\Livewire;
 
 use App\Models\Cart;
 use App\Models\Address;
+use App\Models\Coupon;
 use App\Models\Order;
 use App\Models\OrderItem;
+use App\Mail\OrderConfirmationMail;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Mail;
 use Livewire\Component;
 
 class CheckoutPage extends Component
@@ -42,6 +45,14 @@ class CheckoutPage extends Component
     public ?string $shippingMethod = null;
     public float $shippingCost = 0.00;
 
+    // Payment Method: 'stripe' | 'paypal' | 'cod'
+    public string $paymentMethod = 'cod';
+
+    // Coupon
+    public string $couponCode = '';
+    public ?int $appliedCouponId = null;
+    public ?string $appliedCouponCode = null;
+
     public function mount()
     {
         $this->cart = Cart::current();
@@ -62,6 +73,15 @@ class CheckoutPage extends Component
         } else {
             $this->shippingMethod = 'standard';
             $this->shippingCost = 5.99;
+        }
+
+        // Default payment method: first configured option
+        if (!empty(config('services.stripe.secret'))) {
+            $this->paymentMethod = 'stripe';
+        } elseif (class_exists(\App\Services\PayPalService::class) && app(\App\Services\PayPalService::class)->isConfigured()) {
+            $this->paymentMethod = 'paypal';
+        } else {
+            $this->paymentMethod = 'cod';
         }
 
         // Pre-fill shipping address if user is logged in and has a default address
@@ -565,6 +585,48 @@ class CheckoutPage extends Component
         return (float) $this->cart->items->sum('total_price');
     }
 
+    public function getDiscountAmountProperty(): float
+    {
+        if (!$this->appliedCouponId) {
+            return 0.0;
+        }
+        $coupon = Coupon::find($this->appliedCouponId);
+        if (!$coupon) {
+            return 0.0;
+        }
+        return $coupon->calculateDiscount($this->subtotal);
+    }
+
+    public function applyCoupon(): void
+    {
+        $this->resetValidation('couponCode');
+        $code = trim($this->couponCode);
+        if ($code === '') {
+            $this->addError('couponCode', 'Please enter a coupon code.');
+            return;
+        }
+
+        $userId = auth()->id();
+        $coupon = Coupon::findValid($code, $this->subtotal, $userId, $message);
+
+        if (!$coupon) {
+            $this->addError('couponCode', $message ?? 'Invalid coupon code.');
+            return;
+        }
+
+        $this->appliedCouponId = $coupon->id;
+        $this->appliedCouponCode = $coupon->code;
+        $this->couponCode = $coupon->code;
+    }
+
+    public function removeCoupon(): void
+    {
+        $this->appliedCouponId = null;
+        $this->appliedCouponCode = null;
+        $this->couponCode = '';
+        $this->resetValidation('couponCode');
+    }
+
     public function getShippingMethodsProperty(): array
     {
         return [
@@ -613,13 +675,14 @@ class CheckoutPage extends Component
 
     public function getTaxProperty(): float
     {
-        // Simple tax calculation: 8% of subtotal + shipping
-        return round(($this->subtotal + $this->shippingCost) * 0.08, 2);
+        // Tax: 8% of (subtotal - discount + shipping)
+        $taxable = $this->subtotal - $this->discountAmount + $this->shippingCost;
+        return round(max(0, $taxable) * 0.08, 2);
     }
 
     public function getGrandTotalProperty(): float
     {
-        return round($this->subtotal + $this->shippingCost + $this->tax, 2);
+        return round($this->subtotal - $this->discountAmount + $this->shippingCost + $this->tax, 2);
     }
 
     public function getIsFormValidProperty(): bool
@@ -726,6 +789,10 @@ class CheckoutPage extends Component
                 $orderNumber = 'ORD-' . date('Ymd') . '-' . strtoupper(substr(uniqid(), -6));
             } while (Order::where('order_number', $orderNumber)->exists());
 
+            $discountTotal = $this->discountAmount;
+            $couponId = $this->appliedCouponId;
+            $couponCode = $this->appliedCouponCode;
+
             // Create order
             $order = Order::create([
                 'user_id' => auth()->id(),
@@ -734,13 +801,19 @@ class CheckoutPage extends Component
                 'shipping_address_id' => $shippingAddress->id,
                 'billing_address_id' => $billingAddress->id,
                 'subtotal' => $this->subtotal,
-                'discount_total' => 0,
+                'discount_total' => $discountTotal,
+                'coupon_id' => $couponId,
+                'coupon_code' => $couponCode,
                 'tax_total' => $this->tax,
                 'shipping_total' => $this->shippingCost,
                 'grand_total' => $this->grandTotal,
-                'payment_method' => null,
+                'payment_method' => $this->paymentMethod,
                 'payment_status' => 'pending',
             ]);
+
+            if ($couponId) {
+                Coupon::where('id', $couponId)->increment('times_used');
+            }
 
             // Create order items
             foreach ($this->cart->items as $cartItem) {
@@ -767,6 +840,12 @@ class CheckoutPage extends Component
             $this->cart->save();
 
             DB::commit();
+
+            // Send order confirmation email
+            $order->load(['user']);
+            if ($order->user && $order->user->email) {
+                Mail::to($order->user->email)->send(new OrderConfirmationMail($order));
+            }
 
             // Store success flag in session for popup after redirect
             session()->flash('order_placed_success', true);
@@ -951,19 +1030,16 @@ class CheckoutPage extends Component
     {
         $savedShippingAddresses = collect();
         $savedBillingAddresses = collect();
-        
+
         if (auth()->check()) {
-            $savedShippingAddresses = Address::where('user_id', auth()->id())
-                ->where('type', 'shipping')
+            // Single query for all user addresses, then split by type (saves one DB round-trip)
+            $addresses = Address::where('user_id', auth()->id())
                 ->orderBy('is_default', 'desc')
                 ->orderBy('created_at', 'desc')
                 ->get();
 
-            $savedBillingAddresses = Address::where('user_id', auth()->id())
-                ->where('type', 'billing')
-                ->orderBy('is_default', 'desc')
-                ->orderBy('created_at', 'desc')
-                ->get();
+            $savedShippingAddresses = $addresses->where('type', 'shipping')->values();
+            $savedBillingAddresses = $addresses->where('type', 'billing')->values();
 
             // Copy shipping to billing on mount if same as shipping is checked
             if ($this->billingSameAsShipping && !empty($this->shippingFullName)) {
@@ -971,9 +1047,15 @@ class CheckoutPage extends Component
             }
         }
 
+        $stripeConfigured = !empty(config('services.stripe.secret'));
+        $paypalConfigured = class_exists(\App\Services\PayPalService::class)
+            && app(\App\Services\PayPalService::class)->isConfigured();
+
         return view('livewire.checkout-page', [
             'savedShippingAddresses' => $savedShippingAddresses,
             'savedBillingAddresses' => $savedBillingAddresses,
+            'stripeConfigured' => $stripeConfigured,
+            'paypalConfigured' => $paypalConfigured,
         ]);
     }
 }

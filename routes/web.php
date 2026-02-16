@@ -37,4 +37,17 @@ Route::get('/orders/{orderNumber}', OrderShowPage::class)
     ->middleware(['auth'])
     ->name('orders.show');
 
+// Admin (auth + is_admin)
+Route::prefix('admin')->middleware(['auth', 'admin'])->name('admin.')->group(function () {
+    Route::get('/', \App\Http\Controllers\Admin\DashboardController::class)->name('dashboard');
+    Route::get('/orders', [\App\Http\Controllers\Admin\OrderController::class, 'index'])->name('orders.index');
+    Route::get('/orders/{order}', [\App\Http\Controllers\Admin\OrderController::class, 'show'])->name('orders.show');
+    Route::patch('/orders/{order}/status', [\App\Http\Controllers\Admin\OrderController::class, 'updateStatus'])->name('orders.update-status');
+    Route::delete('/orders/{order}', [\App\Http\Controllers\Admin\OrderController::class, 'destroy'])->name('orders.destroy');
+    Route::resource('products', \App\Http\Controllers\Admin\ProductController::class)->except(['show']);
+    Route::resource('users', \App\Http\Controllers\Admin\UserController::class)->only(['index', 'edit', 'update', 'destroy']);
+    Route::resource('categories', \App\Http\Controllers\Admin\CategoryController::class)->except(['show']);
+    Route::resource('banners', \App\Http\Controllers\Admin\BannerController::class)->except(['show']);
+});
+
 require __DIR__.'/auth.php';
