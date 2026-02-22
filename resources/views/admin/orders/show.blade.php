@@ -29,6 +29,7 @@
                     <form method="POST" action="{{ route('admin.orders.update-status', $order) }}" class="flex items-center gap-2 flex-wrap">
                         @csrf
                         @method('PATCH')
+                        <input type="text" name="tracking_number" value="{{ old('tracking_number', $order->tracking_number) }}" placeholder="Tracking number" class="rounded-md border-gray-300 text-sm w-40 focus:border-indigo-500 focus:ring-indigo-500" />
                         <select name="status" class="rounded-md border-gray-300 text-sm focus:border-indigo-500 focus:ring-indigo-500">
                             <option value="pending" {{ $order->status === 'pending' ? 'selected' : '' }}>Pending</option>
                             <option value="processing" {{ $order->status === 'processing' ? 'selected' : '' }}>Processing</option>

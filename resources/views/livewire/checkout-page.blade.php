@@ -16,6 +16,31 @@
                 </x-slot:icon>
             </x-empty-state>
         @else
+            <!-- Checkout progress: Address → Shipping → Payment → Review -->
+            <nav class="mb-8" aria-label="Checkout progress">
+                <ol class="flex flex-wrap items-center gap-2 text-sm">
+                    <li class="flex items-center gap-2 text-warm-darker font-medium">
+                        <span class="flex h-8 w-8 items-center justify-center rounded-full bg-warm text-white">1</span>
+                        Address
+                    </li>
+                    <li class="flex items-center gap-2 text-warm/80">
+                        <span class="h-0.5 w-4 bg-cream-300" aria-hidden="true"></span>
+                        <span class="flex h-8 w-8 items-center justify-center rounded-full border-2 border-cream-300">2</span>
+                        Shipping
+                    </li>
+                    <li class="flex items-center gap-2 text-warm/80">
+                        <span class="h-0.5 w-4 bg-cream-300" aria-hidden="true"></span>
+                        <span class="flex h-8 w-8 items-center justify-center rounded-full border-2 border-cream-300">3</span>
+                        Payment
+                    </li>
+                    <li class="flex items-center gap-2 text-warm/80">
+                        <span class="h-0.5 w-4 bg-cream-300" aria-hidden="true"></span>
+                        <span class="flex h-8 w-8 items-center justify-center rounded-full border-2 border-cream-300">4</span>
+                        Review
+                    </li>
+                </ol>
+            </nav>
+
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
                 <!-- Left Column: Checkout Form -->
                 <div class="lg:col-span-2 space-y-6">
@@ -90,8 +115,9 @@
                                            placeholder="Enter phone number (7-15 digits)"
                                            required />
                                 </div>
-                                <x-input-error :messages="$errors->get('shippingPhone')" class="mt-2" />
-                            </div>
+                                    <p class="mt-1 text-xs text-warm/70">7–15 digits, numbers only.</p>
+                                    <x-input-error :messages="$errors->get('shippingPhone')" class="mt-2" />
+                                </div>
 
                             <div>
                                 <x-input-label for="shippingAddressLine1" value="Address Line 1 *" />
@@ -159,6 +185,7 @@
                                            x-bind:placeholder="$wire.shippingCountry === 'US' ? '12345 or 12345-6789' : (['CA', 'GB'].includes($wire.shippingCountry) ? 'Enter postal code' : 'Enter postal code (numbers only)')"
                                            class="block mt-1 w-full rounded-md border-cream-300 shadow-sm focus:border-warm focus:ring-warm/30 {{ $errors->has('shippingPostalCode') ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : '' }}" 
                                            required />
+                                    <p class="mt-1 text-xs text-warm/70">US: 5 or 9 digits (e.g. 12345 or 12345-6789).</p>
                                     <x-input-error :messages="$errors->get('shippingPostalCode')" class="mt-2" />
                                 </div>
 

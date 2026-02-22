@@ -28,6 +28,12 @@ class Order extends Model
         'grand_total',
         'payment_method',
         'payment_status',
+        'tracking_number',
+        'shipped_at',
+    ];
+
+    protected $casts = [
+        'shipped_at' => 'datetime',
     ];
 
     public function coupon(): BelongsTo

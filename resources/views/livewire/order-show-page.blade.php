@@ -1,8 +1,20 @@
 <div>
+    <style>
+        @media print {
+            .no-print { display: none !important; }
+            body { background: #fff; }
+            .print\:block { display: block !important; }
+        }
+    </style>
     <div class="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
-        <a href="{{ route('orders.index') }}" class="text-sm text-indigo-600 hover:underline mb-6 inline-block">
-            &larr; Back to Orders
-        </a>
+        <div class="no-print flex items-center justify-between mb-6">
+            <a href="{{ route('orders.index') }}" class="text-sm text-indigo-600 hover:underline">
+                &larr; Back to Orders
+            </a>
+            <button type="button" onclick="window.print()" class="text-sm font-medium text-indigo-600 hover:text-indigo-800">
+                Print order
+            </button>
+        </div>
 
         <div class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
             <!-- Order Header -->
@@ -33,9 +45,46 @@
                             @endif">
                             Payment: {{ ucfirst($order->payment_status) }}
                         </span>
+                        <a href="{{ route('orders.invoice', $order->order_number) }}" target="_blank" class="no-print text-sm font-medium text-indigo-600 hover:text-indigo-800">
+                            Download invoice (PDF)
+                        </a>
+                        <button type="button" wire:click="reorder" class="no-print text-sm font-medium text-indigo-600 hover:text-indigo-800">
+                            Buy again
+                        </button>
                     </div>
                 </div>
             </div>
+
+            <!-- Tracking & timeline -->
+            @if($order->tracking_number || in_array($order->status, ['processing', 'shipped', 'delivered'], true))
+                <div class="px-6 py-4 border-b border-gray-200 bg-gray-50/70">
+                    @if($order->tracking_number)
+                        <p class="text-sm text-gray-700">
+                            <span class="font-medium">Tracking:</span>
+                            <a href="https://www.google.com/search?q={{ urlencode($order->tracking_number) }}" target="_blank" rel="noopener noreferrer" class="text-indigo-600 hover:underline font-mono">{{ $order->tracking_number }}</a>
+                            <span class="text-gray-500 ml-1">(search carrier)</span>
+                        </p>
+                    @endif
+                    <div class="mt-3 flex flex-wrap items-center gap-4 text-sm">
+                        <span class="flex items-center gap-1.5 {{ in_array($order->status, ['pending','processing','shipped','delivered'], true) ? 'text-green-600' : 'text-gray-400' }}">
+                            <span class="w-2 h-2 rounded-full {{ in_array($order->status, ['pending','processing','shipped','delivered'], true) ? 'bg-green-500' : 'bg-gray-300' }}"></span>
+                            Order placed {{ $order->created_at->format('M j, Y') }}
+                        </span>
+                        <span class="flex items-center gap-1.5 {{ in_array($order->status, ['processing','shipped','delivered'], true) ? 'text-green-600' : 'text-gray-400' }}">
+                            <span class="w-2 h-2 rounded-full {{ in_array($order->status, ['processing','shipped','delivered'], true) ? 'bg-green-500' : 'bg-gray-300' }}"></span>
+                            Processing
+                        </span>
+                        <span class="flex items-center gap-1.5 {{ in_array($order->status, ['shipped','delivered'], true) ? 'text-green-600' : 'text-gray-400' }}">
+                            <span class="w-2 h-2 rounded-full {{ in_array($order->status, ['shipped','delivered'], true) ? 'bg-green-500' : 'bg-gray-300' }}"></span>
+                            Shipped{{ $order->shipped_at ? ' ' . $order->shipped_at->format('M j, Y') : '' }}
+                        </span>
+                        <span class="flex items-center gap-1.5 {{ $order->status === 'delivered' ? 'text-green-600' : 'text-gray-400' }}">
+                            <span class="w-2 h-2 rounded-full {{ $order->status === 'delivered' ? 'bg-green-500' : 'bg-gray-300' }}"></span>
+                            Delivered
+                        </span>
+                    </div>
+                </div>
+            @endif
 
             <div class="p-6">
                 <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">

@@ -60,4 +60,19 @@ class Product extends Model
     {
         return $this->approvedReviews()->count();
     }
+
+    /** True when no inventory tracking (stock_quantity null) or quantity > 0. */
+    public function isInStock(): bool
+    {
+        if ($this->stock_quantity === null) {
+            return true;
+        }
+        return (int) $this->stock_quantity > 0;
+    }
+
+    /** Available quantity; null means not tracked (unlimited). */
+    public function availableStock(): ?int
+    {
+        return $this->stock_quantity === null ? null : (int) $this->stock_quantity;
+    }
 }

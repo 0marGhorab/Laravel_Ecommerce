@@ -14,6 +14,8 @@ Route::get('/', ProductIndex::class)->name('products.index');
 Route::get('/cart', CartPage::class)->name('cart.index');
 
 Route::get('/checkout', CheckoutPage::class)->name('checkout.index');
+Route::get('/checkout/stripe/success', [\App\Http\Controllers\StripeCheckoutController::class, 'success'])->name('checkout.stripe.success')->middleware('auth');
+Route::get('/checkout/stripe/cancel', [\App\Http\Controllers\StripeCheckoutController::class, 'cancel'])->name('checkout.stripe.cancel')->middleware('auth');
 
 Route::get('/wishlist', WishlistPage::class)
     ->name('wishlist.index');
@@ -36,6 +38,9 @@ Route::get('/orders', OrderHistoryPage::class)
 Route::get('/orders/{orderNumber}', OrderShowPage::class)
     ->middleware(['auth'])
     ->name('orders.show');
+Route::get('/orders/{orderNumber}/invoice', [\App\Http\Controllers\OrderInvoiceController::class, '__invoke'])
+    ->middleware(['auth'])
+    ->name('orders.invoice');
 
 // Admin (auth + is_admin)
 Route::prefix('admin')->middleware(['auth', 'admin'])->name('admin.')->group(function () {

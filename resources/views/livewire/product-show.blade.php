@@ -90,8 +90,17 @@
                     @endif
                 </div>
 
+                @if(isset($stockMessage))
+                    <p class="text-sm {{ $outOfStock ? 'text-red-600 font-medium' : ($lowStock ? 'text-amber-600' : 'text-warm/70') }}">
+                        {{ $stockMessage }}
+                    </p>
+                @endif
+                @error('stock')
+                    <p class="text-sm text-red-600 mt-1">{{ $message }}</p>
+                @enderror
+
                 <div class="flex items-center gap-3 mt-4">
-                    @if ($cartQuantity > 0)
+                    @if ($cartQuantity > 0 && !$outOfStock)
                         <!-- Counter -->
                         <div class="flex items-center border border-cream-300 rounded-lg">
                             <button
@@ -114,6 +123,10 @@
                                 +
                             </button>
                         </div>
+                    @elseif($outOfStock)
+                        <button type="button" disabled class="btn-cozy opacity-60 cursor-not-allowed">
+                            Out of stock
+                        </button>
                     @else
                         <button
                             wire:click="addToCart"

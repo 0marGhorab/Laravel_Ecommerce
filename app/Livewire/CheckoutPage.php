@@ -11,6 +11,7 @@ use App\Mail\OrderConfirmationMail;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
 use Livewire\Component;
+use Stripe\StripeClient;
 
 class CheckoutPage extends Component
 {
@@ -832,6 +833,14 @@ class CheckoutPage extends Component
                 ]);
             }
 
+            // Stripe: redirect to Stripe Checkout; cart is cleared and email sent on success callback
+            if ($this->paymentMethod === 'stripe' && !empty(config('services.stripe.secret'))) {
+                $checkoutSession = $this->createStripeCheckoutSession($order);
+                DB::commit();
+                $this->redirect($checkoutSession->url);
+                return;
+            }
+
             // Clear cart items
             $this->cart->items()->delete();
             
@@ -871,6 +880,34 @@ class CheckoutPage extends Component
             
             $this->addError('form', $errorMessage);
         }
+    }
+
+    private function createStripeCheckoutSession(Order $order): \Stripe\Checkout\Session
+    {
+        $stripe = new StripeClient(config('services.stripe.secret'));
+        $currency = strtolower(config('services.stripe.currency', 'usd'));
+        $amountCents = (int) round($order->grand_total * 100);
+
+        return $stripe->checkout->sessions->create([
+            'mode' => 'payment',
+            'payment_method_types' => ['card'],
+            'line_items' => [
+                [
+                    'quantity' => 1,
+                    'price_data' => [
+                        'currency' => $currency,
+                        'unit_amount' => $amountCents,
+                        'product_data' => [
+                            'name' => 'Order ' . $order->order_number,
+                            'description' => config('app.name') . ' – Order total',
+                        ],
+                    ],
+                ],
+            ],
+            'client_reference_id' => (string) $order->id,
+            'success_url' => route('checkout.stripe.success', [], true) . '?session_id={CHECKOUT_SESSION_ID}',
+            'cancel_url' => route('checkout.index', [], true),
+        ]);
     }
 
     public function validateAllFields(): void

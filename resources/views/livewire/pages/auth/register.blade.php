@@ -30,6 +30,15 @@ new #[Layout('layouts.guest')] class extends Component
         return max(0, 30 - (time() - $this->verificationSentAt));
     }
 
+    /** When using MAIL_MAILER=log in local, we show the code on screen so you can verify without SMTP. */
+    public function getDevVerificationCodeProperty(): ?string
+    {
+        if (!app()->environment('local') || config('mail.default') !== 'log') {
+            return null;
+        }
+        return session('email_verification_dev_code');
+    }
+
     /**
      * Register immediately (no email verification). Used when email_verification_on_register is false.
      */
@@ -102,6 +111,9 @@ new #[Layout('layouts.guest')] class extends Component
 
         Mail::to($validated['email'])->send(new \App\Mail\EmailVerificationCodeMail($code));
 
+        if (app()->environment('local') && config('mail.default') === 'log') {
+            session()->put('email_verification_dev_code', $code);
+        }
         $this->verificationSentAt = time();
         $this->step = 2;
         $this->code = '';
@@ -142,6 +154,7 @@ new #[Layout('layouts.guest')] class extends Component
         ])));
 
         $pending->delete();
+        session()->forget('email_verification_dev_code');
         Auth::login($user);
 
         $this->redirect(route('dashboard', absolute: false), navigate: true);
@@ -170,6 +183,9 @@ new #[Layout('layouts.guest')] class extends Component
         ]);
 
         Mail::to($this->email)->send(new \App\Mail\EmailVerificationCodeMail($code));
+        if (app()->environment('local') && config('mail.default') === 'log') {
+            session()->put('email_verification_dev_code', $code);
+        }
         $this->verificationSentAt = time();
         $this->resetValidation();
         $this->dispatch('code-sent');
@@ -265,6 +281,11 @@ new #[Layout('layouts.guest')] class extends Component
     @else
         {{-- Step 2: Verification --}}
         <div class="rounded-lg border border-gray-200 bg-gray-50 p-6" x-data="{ seconds: {{ $this->resendSecondsRemaining }} }" x-init="setInterval(() => { if (seconds > 0) seconds-- }, 1000); $wire.on('code-sent', () => { seconds = 30 })">
+            @if($this->devVerificationCode)
+                <div class="mb-4 rounded-md bg-amber-50 border border-amber-200 p-3 text-sm text-amber-800">
+                    <strong>Development mode:</strong> Mail is not sent. Use this code: <code class="font-mono font-bold">{{ $this->devVerificationCode }}</code>
+                </div>
+            @endif
             <h2 class="text-lg font-semibold text-gray-900 mb-1">Verify your email</h2>
             <p class="text-sm text-gray-600 mb-4">We sent a 6-digit code to the email below. Enter it to create your account.</p>
 

@@ -30,10 +30,22 @@ class ProductShow extends Component
     {
         $product = $this->product;
 
-        $cart = \App\Models\Cart::current();
+        if (!$product->isInStock()) {
+            $this->addError('stock', 'This item is currently out of stock.');
+            return;
+        }
 
+        $cart = \App\Models\Cart::current();
         $item = $cart->items()->firstOrNew(['product_id' => $product->id]);
-        $item->quantity = $item->exists ? $item->quantity + 1 : 1;
+        $newQty = $item->exists ? $item->quantity + 1 : 1;
+
+        $available = $product->availableStock();
+        if ($available !== null && $newQty > $available) {
+            $this->addError('stock', 'Only ' . $available . ' left in stock.');
+            return;
+        }
+
+        $item->quantity = $newQty;
         $item->unit_price = $product->price;
         $item->total_price = $item->quantity * $item->unit_price;
         $item->save();
@@ -48,6 +60,21 @@ class ProductShow extends Component
 
     public function incrementProduct(): void
     {
+        $product = $this->product;
+        if (!$product->isInStock()) {
+            return;
+        }
+        $cart = Cart::current();
+        $item = $cart->items()->where('product_id', $product->id)->first();
+        if (!$item) {
+            $this->addToCart();
+            return;
+        }
+        $available = $product->availableStock();
+        if ($available !== null && $item->quantity >= $available) {
+            $this->addError('stock', 'Only ' . $available . ' left in stock.');
+            return;
+        }
         $this->addToCart();
     }
 
@@ -188,10 +215,18 @@ class ProductShow extends Component
             $canReview = $userReview === null;
         }
 
+        $available = $this->product->availableStock();
+        $outOfStock = !$this->product->isInStock();
+        $lowStock = $available !== null && $available > 0 && $available <= 5;
+        $stockMessage = $outOfStock ? 'Out of stock' : ($available === null ? 'In stock' : ($lowStock ? 'Only ' . $available . ' left' : 'In stock'));
+
         return view('livewire.product-show', [
             'product' => $this->product,
             'isInWishlist' => $isInWishlist,
             'cartQuantity' => $cartQuantity,
+            'outOfStock' => $outOfStock,
+            'stockMessage' => $stockMessage,
+            'lowStock' => $lowStock,
             'recommendedProducts' => $recommendedProducts,
             'reviews' => $reviews,
             'userReview' => $userReview,

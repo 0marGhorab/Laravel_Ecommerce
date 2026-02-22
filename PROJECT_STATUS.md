@@ -101,14 +101,14 @@
 ### High Priority
 | Task | Description | Status |
 |------|-------------|--------|
-| Payment integration | Stripe/PayPal (or other) for checkout | Not started |
-| Admin panel | Products, orders, categories, users management | Done (dashboard, orders, products, users lists; order status update) |
+| Payment integration | Stripe Checkout for card payments | Done (redirect flow; success/cancel routes; config in `config/services.php`) |
+| Admin panel | Products, orders, categories, users management | Done (CRUD for products/categories; order status + tracking) |
 | Order emails | Order confirmation and status update emails | Done (confirmation on place order; status email when admin updates) |
 
 ### Medium Priority
 | Task | Description | Status |
 |------|-------------|--------|
-| Order tracking | Status updates, tracking number, track order page/link | Not started |
+| Order tracking | Tracking number, shipped_at, timeline on order detail, admin set tracking | Done |
 | Product reviews & ratings | Customer reviews and star rating on product page | Done (star rating, list, submit, one per user) |
 | Coupon / discount codes | Apply discount at checkout | Done (percentage/fixed, min order, max uses, per user) |
 | Enhancing UI | Consistency, loading states, empty states, accessibility | Partially done (loading, empty states, search, focus) |

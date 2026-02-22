@@ -34,8 +34,9 @@
 
                                 <div class="flex items-center gap-3">
                                     <a 
-                                        href="{{ route('orders.show', $order->order_number) }}"
+                                        href="{{ route('orders.show', ['orderNumber' => $order->order_number]) }}"
                                         class="btn-cozy-soft text-sm"
+                                        wire:navigate
                                     >
                                         View Details
                                     </a>

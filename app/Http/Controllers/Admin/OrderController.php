@@ -45,6 +45,7 @@ class OrderController extends Controller
         $request->validate([
             'status' => 'required|in:pending,processing,shipped,delivered,cancelled',
             'payment_status' => 'nullable|in:pending,paid,failed,refunded',
+            'tracking_number' => 'nullable|string|max:255',
         ]);
 
         $previousStatus = $order->status;
@@ -52,6 +53,12 @@ class OrderController extends Controller
         $data = ['status' => $request->status];
         if ($request->filled('payment_status')) {
             $data['payment_status'] = $request->payment_status;
+        }
+        if ($request->has('tracking_number')) {
+            $data['tracking_number'] = $request->tracking_number ?: null;
+        }
+        if ($request->status === 'shipped' && !$order->shipped_at) {
+            $data['shipped_at'] = now();
         }
         $order->update($data);
 
