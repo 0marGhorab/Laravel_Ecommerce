@@ -8,6 +8,11 @@ use App\Livewire\WishlistPage;
 use App\Livewire\CheckoutPage;
 use App\Livewire\OrderHistoryPage;
 use App\Livewire\OrderShowPage;
+use App\Http\Controllers\Api\ProductController as ApiProductController;
+use App\Http\Controllers\Api\CategoryController as ApiCategoryController;
+use App\Http\Controllers\Api\CartController as ApiCartController;
+use App\Http\Controllers\Api\WishlistController as ApiWishlistController;
+use App\Http\Controllers\Api\OrderController as ApiOrderController;
 
 Route::get('/', ProductIndex::class)->name('products.index');
 
@@ -56,3 +61,28 @@ Route::prefix('admin')->middleware(['auth', 'admin'])->name('admin.')->group(fun
 });
 
 require __DIR__.'/auth.php';
+
+// JSON API (session-authenticated, for internal/front-end use)
+Route::prefix('api')->name('api.')->group(function () {
+    // Public catalog
+    Route::get('/products', [ApiProductController::class, 'index'])->name('products.index');
+    Route::get('/products/{product}', [ApiProductController::class, 'show'])->name('products.show');
+    Route::get('/categories', [ApiCategoryController::class, 'index'])->name('categories.index');
+
+    // Cart is per-session (guest or auth)
+    Route::get('/cart', [ApiCartController::class, 'show'])->name('cart.show');
+    Route::post('/cart/items', [ApiCartController::class, 'addItem'])->name('cart.items.store');
+    Route::patch('/cart/items/{item}', [ApiCartController::class, 'updateItem'])->name('cart.items.update');
+    Route::delete('/cart/items/{item}', [ApiCartController::class, 'removeItem'])->name('cart.items.destroy');
+    Route::delete('/cart', [ApiCartController::class, 'clear'])->name('cart.clear');
+
+    // Authenticated user resources
+    Route::middleware('auth')->group(function () {
+        Route::get('/wishlist', [ApiWishlistController::class, 'index'])->name('wishlist.index');
+        Route::post('/wishlist', [ApiWishlistController::class, 'store'])->name('wishlist.store');
+        Route::delete('/wishlist/{product}', [ApiWishlistController::class, 'destroy'])->name('wishlist.destroy');
+
+        Route::get('/orders', [ApiOrderController::class, 'index'])->name('orders.index');
+        Route::get('/orders/{orderNumber}', [ApiOrderController::class, 'show'])->name('orders.show');
+    });
+});
